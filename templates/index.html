@@ -1,0 +1,168 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>MapQuest Route Planner</title>
+
+    <link
+      rel="stylesheet"
+      href="C:\Users\Kenn Gob\OneDrive\Desktop\F-VI\F-VI\static\styles.css"
+    />
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- HEADER -->
+
+      <header>
+        <h1>MapQuest Route Planner</h1>
+
+        <p>Find directions between two locations</p>
+      </header>
+
+      <!-- SEARCH FORM -->
+
+      <section class="search-card">
+        <form method="POST">
+          <label for="origin"> Starting Location </label>
+
+          <input
+            type="text"
+            id="origin"
+            name="origin"
+            value="{{ orig }}"
+            placeholder="e.g. Manila"
+            required
+          />
+
+          <label for="destination"> Destination </label>
+
+          <input
+            type="text"
+            id="destination"
+            name="destination"
+            value="{{ dest }}"
+            placeholder="e.g. Quezon City"
+            required
+          />
+
+          <label> Distance Unit </label>
+
+          <div class="unit-options">
+            <label>
+              <input
+                type="radio"
+                name="unit"
+                value="km"
+                {%
+                if
+                unit=""
+                ="km"
+                %}checked{%
+                endif
+                %}
+              />
+
+              Kilometers
+            </label>
+
+            <label>
+              <input
+                type="radio"
+                name="unit"
+                value="mi"
+                {%
+                if
+                unit=""
+                ="mi"
+                %}checked{%
+                endif
+                %}
+              />
+
+              Miles
+            </label>
+          </div>
+
+          <button type="submit">Get Directions</button>
+        </form>
+      </section>
+
+      <!-- ERROR -->
+
+      {% if error %}
+
+      <div class="error">{{ error }}</div>
+
+      {% endif %}
+
+      <!-- ROUTE RESULT -->
+
+      {% if route_info %}
+
+      <section class="results">
+        <h2>Route Summary</h2>
+
+        <table>
+          <tr>
+            <th>Starting Location</th>
+
+            <td>{{ orig }}</td>
+          </tr>
+
+          <tr>
+            <th>Destination</th>
+
+            <td>{{ dest }}</td>
+          </tr>
+
+          <tr>
+            <th>Travel Time</th>
+
+            <td>{{ route_info.time }}</td>
+          </tr>
+
+          <tr>
+            <th>Total Distance</th>
+
+            <td>{{ route_info.distance }} {{ route_info.unit }}</td>
+          </tr>
+        </table>
+
+        <h2>Turn-by-Turn Directions</h2>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+
+              <th>Instruction</th>
+
+              <th>Distance</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for direction in directions %}
+
+            <tr>
+              <td>{{ loop.index }}</td>
+
+              <td>{{ direction.instruction }}</td>
+
+              <td>{{ direction.distance }} {{ direction.unit }}</td>
+            </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+
+      {% endif %}
+    </div>
+  </body>
+</html>
