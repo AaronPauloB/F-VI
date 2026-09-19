@@ -173,9 +173,8 @@ def clean_shape(route):
 
 
 def route_summary(route, origin, destination, unit, route_type, route_name=None):
-    summary = route.get("summary", {})
-    distance = float(summary.get("distance", 0) or 0)
-    raw_time = int(summary.get("time", 0) or 0)
+    distance = float(route.get("distance", 0) or 0)
+    raw_time = int(route.get("time", 0) or 0)
     hours, remainder = divmod(raw_time, 3600)
     minutes = remainder // 60
     duration = f"{hours} hr {minutes} min" if hours else f"{minutes} min"
