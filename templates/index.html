@@ -1,168 +1,147 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MapQuest Route Planner</title>
-
-    <link
-      rel="stylesheet"
-      href="C:\Users\Kenn Gob\OneDrive\Desktop\F-VI\F-VI\static\styles.css"
-    />
-  </head>
-
-  <body>
-    <div class="container">
-      <!-- HEADER -->
-
-      <header>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+<header class="topbar">
+    <div>
+        <p class="eyebrow">DEVASC • OPTION 1</p>
         <h1>MapQuest Route Planner</h1>
-
-        <p>Find directions between two locations</p>
-      </header>
-
-      <!-- SEARCH FORM -->
-
-      <section class="search-card">
-        <form method="POST">
-          <label for="origin"> Starting Location </label>
-
-          <input
-            type="text"
-            id="origin"
-            name="origin"
-            value="{{ orig }}"
-            placeholder="e.g. Manila"
-            required
-          />
-
-          <label for="destination"> Destination </label>
-
-          <input
-            type="text"
-            id="destination"
-            name="destination"
-            value="{{ dest }}"
-            placeholder="e.g. Quezon City"
-            required
-          />
-
-          <label> Distance Unit </label>
-
-          <div class="unit-options">
-            <label>
-              <input
-                type="radio"
-                name="unit"
-                value="km"
-                {%
-                if
-                unit=""
-                ="km"
-                %}checked{%
-                endif
-                %}
-              />
-
-              Kilometers
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="unit"
-                value="mi"
-                {%
-                if
-                unit=""
-                ="mi"
-                %}checked{%
-                endif
-                %}
-              />
-
-              Miles
-            </label>
-          </div>
-
-          <button type="submit">Get Directions</button>
-        </form>
-      </section>
-
-      <!-- ERROR -->
-
-      {% if error %}
-
-      <div class="error">{{ error }}</div>
-
-      {% endif %}
-
-      <!-- ROUTE RESULT -->
-
-      {% if route_info %}
-
-      <section class="results">
-        <h2>Route Summary</h2>
-
-        <table>
-          <tr>
-            <th>Starting Location</th>
-
-            <td>{{ orig }}</td>
-          </tr>
-
-          <tr>
-            <th>Destination</th>
-
-            <td>{{ dest }}</td>
-          </tr>
-
-          <tr>
-            <th>Travel Time</th>
-
-            <td>{{ route_info.time }}</td>
-          </tr>
-
-          <tr>
-            <th>Total Distance</th>
-
-            <td>{{ route_info.distance }} {{ route_info.unit }}</td>
-          </tr>
-        </table>
-
-        <h2>Turn-by-Turn Directions</h2>
-
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-
-              <th>Instruction</th>
-
-              <th>Distance</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {% for direction in directions %}
-
-            <tr>
-              <td>{{ loop.index }}</td>
-
-              <td>{{ direction.instruction }}</td>
-
-              <td>{{ direction.distance }} {{ direction.unit }}</td>
-            </tr>
-
-            {% endfor %}
-          </tbody>
-        </table>
-      </section>
-
-      {% endif %}
+        <p class="subtitle">Enhanced routing, route comparison, turn-by-turn directions, and search history.</p>
     </div>
-  </body>
+    <div id="statusBadge" class="status-badge">Checking API…</div>
+</header>
+
+<main class="shell">
+    <section class="layout">
+        <aside class="panel controls-panel">
+            <div class="panel-heading">
+                <div>
+                    <span class="section-label">PLAN A ROUTE</span>
+                    <h2>Route Settings</h2>
+                </div>
+            </div>
+
+            <form id="routeForm">
+                <label for="origin">Starting location</label>
+                <div class="input-row">
+                    <input id="origin" name="origin" type="text" placeholder="e.g. TIP Quezon City" autocomplete="off" required>
+                    <button type="button" class="swap-btn" id="swapBtn" title="Swap locations">⇅</button>
+                </div>
+
+                <label for="destination">Destination</label>
+                <input id="destination" name="destination" type="text" placeholder="e.g. SM City Marikina" autocomplete="off" required>
+
+                <div class="two-col">
+                    <div>
+                        <label for="unit">Distance unit</label>
+                        <select id="unit">
+                            <option value="k" selected>Kilometers</option>
+                            <option value="m">Miles</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="routeType">Route type</label>
+                        <select id="routeType">
+                            <option value="fastest" selected>Fastest</option>
+                            <option value="shortest">Shortest</option>
+                            <option value="pedestrian">Walking</option>
+                            <option value="bicycle">Bicycle</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="option-box">
+                    <div class="option-title">Avoid on the route</div>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" value="Limited Access"> Highways</label>
+                        <label><input type="checkbox" value="Toll Road"> Toll roads</label>
+                        <label><input type="checkbox" value="Ferry"> Ferries</label>
+                        <label><input type="checkbox" value="Unpaved"> Unpaved roads</label>
+                        <label><input type="checkbox" value="Bridge"> Bridges</label>
+                        <label><input type="checkbox" value="Tunnel"> Tunnels</label>
+                    </div>
+                </div>
+
+                <label class="toggle-row">
+                    <span>
+                        <strong>Compare alternate routes</strong>
+                        <small>Request up to 3 route choices.</small>
+                    </span>
+                    <input id="alternates" type="checkbox" checked>
+                </label>
+
+                <button class="primary-btn" id="routeBtn" type="submit">Find Route</button>
+                <button class="secondary-btn" id="historyBtn" type="button">View Search History</button>
+            </form>
+        </aside>
+
+        <section class="content-area">
+            <div id="errorBox" class="alert error hidden"></div>
+
+            <div id="emptyState" class="empty-state">
+                <div class="empty-icon">⌖</div>
+                <h2>Ready to plan your route</h2>
+                <p>Enter two locations, select your preferences, and the planner will calculate the route through the MapQuest Directions API.</p>
+            </div>
+
+            <div id="results" class="hidden">
+                <div id="routeCards" class="route-cards"></div>
+
+                <div class="map-panel">
+                    <div class="map-heading">
+                        <div>
+                            <span class="section-label">ROUTE MAP</span>
+                            <h2>Visual Route</h2>
+                        </div>
+                        <button class="secondary-btn compact" id="downloadBtn" type="button">Save Report</button>
+                    </div>
+                    <div id="map"></div>
+                    <p class="map-note">Map tiles © OpenStreetMap contributors. Routing data supplied by MapQuest.</p>
+                </div>
+
+                <div class="details-panel">
+                    <div class="map-heading">
+                        <div>
+                            <span class="section-label">NAVIGATION</span>
+                            <h2>Turn-by-Turn Directions</h2>
+                        </div>
+                        <span id="stepCount" class="small-pill"></span>
+                    </div>
+                    <div id="directionsList" class="directions-list"></div>
+                </div>
+            </div>
+
+            <div id="historyPanel" class="details-panel hidden">
+                <div class="map-heading">
+                    <div>
+                        <span class="section-label">LOCAL DATABASE</span>
+                        <h2>Recent Searches</h2>
+                    </div>
+                    <button class="secondary-btn compact" id="clearHistoryBtn" type="button">Clear History</button>
+                </div>
+                <div id="historyList" class="history-list"></div>
+            </div>
+        </section>
+    </section>
+</main>
+
+<footer class="footer">
+    <span>MapQuest Route Planner • DEVASC Feature Enhancement Project</span>
+    <span>Backend: Flask + SQLite • Frontend: HTML/CSS/JavaScript</span>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/static/js/app.js"></script>
+</body>
 </html>
